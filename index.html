@@ -1,34 +1,38 @@
 <!DOCTYPE html>
-<html lang="fa">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نمایش داده‌های اکسل</title>
+    <title>نمایش داده‌های فایل اکسل</title>
 </head>
 <body>
     <h1>داده‌های ستون اول فایل اکسل</h1>
-    <ul id="excel-data"></ul>
+    <ul id="data-list"></ul>
 
     <script>
-        // URL API هاست
-        const apiUrl = 'http://http://172.17.0.30:8000/read_excel';
+        // URL API که داده‌ها را برمی‌گرداند
+        const apiUrl = 'http://172.17.0.30:8000/read_excel';
 
-        // دریافت داده‌ها از API
-        fetch(apiUrl)
-            .then(response => response.json())
-            .then(data => {
-                const ul = document.getElementById('excel-data');
-                
-                // نمایش داده‌ها در صفحه
-                data.forEach(item => {
-                    const li = document.createElement('li');
-                    li.textContent = item;
-                    ul.appendChild(li);
-                });
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
+        // درخواست fetch برای دریافت داده‌ها
+        fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Origin': 'https://ariazxe.github.io'
+            }
+        })
+        .then(response => response.json()) // تبدیل پاسخ به JSON
+        .then(data => {
+            // محل قرار دادن داده‌ها در HTML
+            const dataList = document.getElementById('data-list');
+
+            // هر آیتم داده را به صورت یک لیست نمایش می‌دهیم
+            data.forEach(item => {
+                const listItem = document.createElement('li');
+                listItem.textContent = item;
+                dataList.appendChild(listItem);
             });
+        })
+        .catch(error => console.error('Error fetching data:', error));
     </script>
 </body>
 </html>
