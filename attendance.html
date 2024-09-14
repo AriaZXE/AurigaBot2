@@ -1,107 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance</title>
+    <title>صفحه ساده HTML</title>
 </head>
 <body>
-    <h1>Attendance for Course</h1>
-    <form id="attendanceForm">
-        <table border="1" id="attendanceTable">
-            <!-- Table headers -->
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Attendance 1</th>
-                    <th>Attendance 2</th>
-                    <th>Attendance 3</th>
-                    <th>Attendance 4</th>
-                    <th>Attendance 5</th>
-                    <th>Attendance 6</th>
-                    <th>Attendance 7</th>
-                    <th>Attendance 8</th>
-                    <th>Project Score</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                <!-- Rows will be populated dynamically -->
-            </tbody>
-        </table>
-        <button type="submit">Save</button>
-    </form>
-
-    <script>
-        // Load attendance data from JSON file
-        async function loadAttendanceData() {
-            const response = await fetch('/attendance_data.json');
-            const data = await response.json();
-            return data;
-        }
-
-        // Populate the table with names and attendance fields
-        async function populateTable() {
-            const tableBody = document.getElementById('tableBody');
-            const attendanceData = await loadAttendanceData();
-
-            attendanceData.forEach((row, index) => {
-                const tr = document.createElement('tr');
-
-                // Name column
-                const tdName = document.createElement('td');
-                tdName.innerText = row.name;
-                tr.appendChild(tdName);
-
-                // Attendance columns
-                for (let i = 0; i < 8; i++) {
-                    const tdAttendance = document.createElement('td');
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.checked = row.attendance[i];
-                    tdAttendance.appendChild(checkbox);
-                    tr.appendChild(tdAttendance);
-                }
-
-                // Project score column
-                const tdScore = document.createElement('td');
-                const scoreInput = document.createElement('input');
-                scoreInput.type = 'number';
-                scoreInput.value = row.project_score;
-                tdScore.appendChild(scoreInput);
-                tr.appendChild(tdScore);
-
-                tableBody.appendChild(tr);
-            });
-        }
-
-        // Save data to JSON when form is submitted
-        document.getElementById('attendanceForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-
-            const tableBody = document.getElementById('tableBody');
-            const rows = tableBody.getElementsByTagName('tr');
-            const attendanceData = [];
-
-            for (let row of rows) {
-                const name = row.cells[0].innerText;
-                const attendance = Array.from(row.cells).slice(1, 9).map(cell => cell.firstElementChild.checked);
-                const projectScore = row.cells[9].firstElementChild.value;
-
-                attendanceData.push({ name, attendance, project_score: projectScore });
-            }
-
-            // Save attendance data to JSON file
-            await fetch('/save_attendance', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(attendanceData)
-            });
-
-            alert('Attendance saved!');
-        });
-
-        // Load the table data when the page loads
-        window.onload = populateTable;
-    </script>
+    <h1>به صفحه وب من خوش آمدید!</h1>
+    <p>این یک مثال ساده از یک صفحه HTML است.</p>
 </body>
 </html>
