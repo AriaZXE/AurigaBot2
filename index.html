@@ -1,122 +1,34 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance and Project Scores</title>
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        table, th, td {
-            border: 1px solid black;
-        }
-        th, td {
-            padding: 10px;
-            text-align: center;
-        }
-    </style>
+    <title>نمایش داده‌های اکسل</title>
 </head>
 <body>
-    <h1>Attendance and Project Scores</h1>
-    <table id="attendance-table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th colspan="8">Attendance (Sessions)</th>
-                <th>Project Score</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Rows will be added dynamically -->
-        </tbody>
-    </table>
-    <button onclick="saveData()">Save Attendance</button>
+    <h1>داده‌های ستون اول فایل اکسل</h1>
+    <ul id="excel-data"></ul>
 
     <script>
-        const apiUrl = 'http://172.17.0.30:8000'; // آدرس سرور Flask
+        // URL API هاست
+        const apiUrl = 'http://http://172.17.0.30:8000/read_excel';
 
-        // دریافت داده‌ها از سرور Flask
-        async function loadAttendanceData() {
-            const response = await fetch(`${apiUrl}/attendance_data`);
-            const data = await response.json();
-            populateTable(data);
-        }
-
-        // پر کردن جدول با داده‌های دریافت شده
-        function populateTable(data) {
-            const tableBody = document.querySelector('#attendance-table tbody');
-            tableBody.innerHTML = '';
-
-            for (const [name, details] of Object.entries(data)) {
-                const row = document.createElement('tr');
+        // دریافت داده‌ها از API
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                const ul = document.getElementById('excel-data');
                 
-                // نام دانشجو
-                const nameCell = document.createElement('td');
-                nameCell.textContent = name;
-                row.appendChild(nameCell);
-
-                // دکمه‌های حضور و غیاب
-                for (let i = 0; i < 8; i++) {
-                    const attendanceCell = document.createElement('td');
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.checked = details.attendance[i];
-                    checkbox.addEventListener('change', () => {
-                        details.attendance[i] = checkbox.checked;
-                    });
-                    attendanceCell.appendChild(checkbox);
-                    row.appendChild(attendanceCell);
-                }
-
-                // نمره پروژه
-                const scoreCell = document.createElement('td');
-                const scoreInput = document.createElement('input');
-                scoreInput.type = 'number';
-                scoreInput.value = details.project_score;
-                scoreInput.addEventListener('change', () => {
-                    details.project_score = parseInt(scoreInput.value, 10);
+                // نمایش داده‌ها در صفحه
+                data.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = item;
+                    ul.appendChild(li);
                 });
-                scoreCell.appendChild(scoreInput);
-                row.appendChild(scoreCell);
-
-                tableBody.appendChild(row);
-            }
-        }
-
-        // ذخیره داده‌ها به سرور Flask
-        async function saveData() {
-            const tableBody = document.querySelector('#attendance-table tbody');
-            const rows = tableBody.querySelectorAll('tr');
-            const data = {};
-
-            rows.forEach(row => {
-                const name = row.querySelector('td').textContent;
-                const attendanceCheckboxes = row.querySelectorAll('input[type="checkbox"]');
-                const projectScoreInput = row.querySelector('input[type="number"]');
-
-                data[name] = {
-                    attendance: Array.from(attendanceCheckboxes).map(checkbox => checkbox.checked),
-                    project_score: parseInt(projectScoreInput.value, 10)
-                };
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
             });
-
-            const response = await fetch(`${apiUrl}/save_attendance`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            if (response.ok) {
-                alert('Attendance data saved successfully!');
-            } else {
-                alert('Failed to save attendance data.');
-            }
-        }
-
-        // بارگذاری داده‌ها در هنگام باز کردن صفحه
-        loadAttendanceData();
     </script>
 </body>
 </html>
