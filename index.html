@@ -3,105 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance</title>
+    <title>Attendance and Project Scores</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <h1>Attendance for Course</h1>
-    <form id="attendanceForm">
-        <table border="1" id="attendanceTable">
-            <!-- Table headers -->
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Attendance 1</th>
-                    <th>Attendance 2</th>
-                    <th>Attendance 3</th>
-                    <th>Attendance 4</th>
-                    <th>Attendance 5</th>
-                    <th>Attendance 6</th>
-                    <th>Attendance 7</th>
-                    <th>Attendance 8</th>
-                    <th>Project Score</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                <!-- Rows will be populated dynamically -->
-            </tbody>
-        </table>
-        <button type="submit">Save</button>
-    </form>
+    <h1>Attendance and Project Scores</h1>
+    <table id="attendance-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th colspan="8">Attendance (Sessions)</th>
+                <th>Project Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows will be added dynamically -->
+        </tbody>
+    </table>
+    <button onclick="saveData()">Save Attendance</button>
 
     <script>
-        // Load attendance data from JSON file
+        const apiUrl = 'http://65.109.218.218:8000'; // آدرس سرور Flask
+
+        // دریافت داده‌ها از سرور Flask
         async function loadAttendanceData() {
-            const response = await fetch('/attendance_data.json');
+            const response = await fetch(`${apiUrl}/attendance_data`);
             const data = await response.json();
-            return data;
+            populateTable(data);
         }
 
-        // Populate the table with names and attendance fields
-        async function populateTable() {
-            const tableBody = document.getElementById('tableBody');
-            const attendanceData = await loadAttendanceData();
+        // پر کردن جدول با داده‌های دریافت شده
+        function populateTable(data) {
+            const tableBody = document.querySelector('#attendance-table tbody');
+            tableBody.innerHTML = '';
 
-            attendanceData.forEach((row, index) => {
-                const tr = document.createElement('tr');
+            for (const [name, details] of Object.entries(data)) {
+                const row = document.createElement('tr');
+                
+                // نام دانشجو
+                const nameCell = document.createElement('td');
+                nameCell.textContent = name;
+                row.appendChild(nameCell);
 
-                // Name column
-                const tdName = document.createElement('td');
-                tdName.innerText = row.name;
-                tr.appendChild(tdName);
-
-                // Attendance columns
+                // دکمه‌های حضور و غیاب
                 for (let i = 0; i < 8; i++) {
-                    const tdAttendance = document.createElement('td');
+                    const attendanceCell = document.createElement('td');
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
-                    checkbox.checked = row.attendance[i];
-                    tdAttendance.appendChild(checkbox);
-                    tr.appendChild(tdAttendance);
+                    checkbox.checked = details.attendance[i];
+                    checkbox.addEventListener('change', () => {
+                        details.attendance[i] = checkbox.checked;
+                    });
+                    attendanceCell.appendChild(checkbox);
+                    row.appendChild(attendanceCell);
                 }
 
-                // Project score column
-                const tdScore = document.createElement('td');
+                // نمره پروژه
+                const scoreCell = document.createElement('td');
                 const scoreInput = document.createElement('input');
                 scoreInput.type = 'number';
-                scoreInput.value = row.project_score;
-                tdScore.appendChild(scoreInput);
-                tr.appendChild(tdScore);
+                scoreInput.value = details.project_score;
+                scoreInput.addEventListener('change', () => {
+                    details.project_score = parseInt(scoreInput.value, 10);
+                });
+                scoreCell.appendChild(scoreInput);
+                row.appendChild(scoreCell);
 
-                tableBody.appendChild(tr);
-            });
+                tableBody.appendChild(row);
+            }
         }
 
-        // Save data to JSON when form is submitted
-        document.getElementById('attendanceForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
+        // ذخیره داده‌ها به سرور Flask
+        async function saveData() {
+            const tableBody = document.querySelector('#attendance-table tbody');
+            const rows = tableBody.querySelectorAll('tr');
+            const data = {};
 
-            const tableBody = document.getElementById('tableBody');
-            const rows = tableBody.getElementsByTagName('tr');
-            const attendanceData = [];
+            rows.forEach(row => {
+                const name = row.querySelector('td').textContent;
+                const attendanceCheckboxes = row.querySelectorAll('input[type="checkbox"]');
+                const projectScoreInput = row.querySelector('input[type="number"]');
 
-            for (let row of rows) {
-                const name = row.cells[0].innerText;
-                const attendance = Array.from(row.cells).slice(1, 9).map(cell => cell.firstElementChild.checked);
-                const projectScore = row.cells[9].firstElementChild.value;
-
-                attendanceData.push({ name, attendance, project_score: projectScore });
-            }
-
-            // Save attendance data to JSON file
-            await fetch('/save_attendance', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(attendanceData)
+                data[name] = {
+                    attendance: Array.from(attendanceCheckboxes).map(checkbox => checkbox.checked),
+                    project_score: parseInt(projectScoreInput.value, 10)
+                };
             });
 
-            alert('Attendance saved!');
-        });
+            const response = await fetch(`${apiUrl}/save_attendance`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
 
-        // Load the table data when the page loads
-        window.onload = populateTable;
+            if (response.ok) {
+                alert('Attendance data saved successfully!');
+            } else {
+                alert('Failed to save attendance data.');
+            }
+        }
+
+        // بارگذاری داده‌ها در هنگام باز کردن صفحه
+        loadAttendanceData();
     </script>
 </body>
 </html>
